@@ -13,7 +13,7 @@ spec:
         app: image-catalog
     spec:
       containers:
-        - image: prporso2021/image-catalog:2020-10-30-02-03-02
+        - image: prporso2021/image-catalog:2020-10-30-02-45-03
           name: image-catalog
           env:
             - name: KUMULUZEE_DATASOURCES0_CONNECTIONURL
