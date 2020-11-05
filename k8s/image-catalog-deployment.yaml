@@ -17,9 +17,9 @@ spec:
           name: image-catalog
           env:
             - name: KUMULUZEE_DATASOURCES0_CONNECTIONURL
-              value: jdbc:postgresql://pg-rso2021.postgres.database.azure.com:5432/postgres
+              value: jdbc:postgresql://lallah.db.elephantsql.com:5432/kryfltbl
             - name: KUMULUZEE_DATASOURCES0_USERNAME
-              value: skrbnik@pg-rso2021
+              value: kryfltbl
             - name: KUMULUZEE_DATASOURCES0_PASSWORD
               valueFrom:
                 secretKeyRef:
