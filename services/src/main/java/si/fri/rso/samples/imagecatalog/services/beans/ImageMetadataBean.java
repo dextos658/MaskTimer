@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import org.eclipse.microprofile.metrics.annotation.Timed;
+
 import com.kumuluz.ee.rest.beans.QueryParameters;
 import com.kumuluz.ee.rest.utils.JPAUtils;
 
@@ -37,6 +39,7 @@ public class ImageMetadataBean {
 
     }
 
+    @Timed
     public List<ImageMetadata> getImageMetadataFilter(UriInfo uriInfo) {
 
         QueryParameters queryParameters = QueryParameters.query(uriInfo.getRequestUri().getQuery()).defaultOffset(0)
