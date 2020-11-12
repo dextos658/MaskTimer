@@ -5,11 +5,11 @@ import javax.inject.Inject;
 
 import org.eclipse.microprofile.health.HealthCheck;
 import org.eclipse.microprofile.health.HealthCheckResponse;
-import org.eclipse.microprofile.health.Readiness;
+import org.eclipse.microprofile.health.Liveness;
 
 import si.fri.rso.samples.imagecatalog.config.RestProperties;
 
-@Readiness
+@Liveness
 @ApplicationScoped
 public class CustomHealthCheck implements HealthCheck {
 
