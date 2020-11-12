@@ -20,7 +20,7 @@ kumuluzee:
   metrics:
     web-instrumentation:
       - name: images-endpoint
-        url-pattern: /images/*
+        url-pattern: /v1/images/*
 rest-properties:
   maintenance-mode: false
   broken: false
