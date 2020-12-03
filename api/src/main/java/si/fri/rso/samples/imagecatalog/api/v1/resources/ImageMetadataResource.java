@@ -14,8 +14,13 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CompletionStage;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
@@ -26,12 +31,17 @@ import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import com.kumuluz.ee.cors.annotations.CrossOrigin;
 import com.kumuluz.ee.logs.cdi.Log;
 
+import si.fri.rso.samples.imagecatalog.api.v1.dtos.UploadImageResponse;
+import si.fri.rso.samples.imagecatalog.dtos.ImageProcessRequest;
 import si.fri.rso.samples.imagecatalog.lib.ImageMetadata;
 import si.fri.rso.samples.imagecatalog.services.beans.ImageMetadataBean;
+import si.fri.rso.samples.imagecatalog.services.clients.AmazonRekognitionClient;
+import si.fri.rso.samples.imagecatalog.services.clients.ImageProcessingApi;
 
 @Log
 @ApplicationScoped
@@ -48,6 +58,13 @@ public class ImageMetadataResource {
 
     @Context
     protected UriInfo uriInfo;
+
+    @Inject
+    private AmazonRekognitionClient amazonRekognitionClient;
+
+    @Inject
+    @RestClient
+    private ImageProcessingApi imageProcessingApi;
 
     @Operation(description = "Get all image metadata.", summary = "Get all metadata")
     @APIResponses({
@@ -160,5 +177,59 @@ public class ImageMetadataResource {
         else {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
+    }
+
+    @POST
+    @Path("/upload")
+    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
+    public Response uploadImage(InputStream uploadedInputStream) {
+
+        String imageId = UUID.randomUUID().toString();
+        String imageLocation = UUID.randomUUID().toString();
+
+        byte[] bytes = new byte[0];
+        try (uploadedInputStream) {
+            bytes = uploadedInputStream.readAllBytes();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        UploadImageResponse uploadImageResponse = new UploadImageResponse();
+
+        Integer numberOfFaces = amazonRekognitionClient.countFaces(bytes);
+        uploadImageResponse.setNumberOfFaces(numberOfFaces);
+
+        if (numberOfFaces != 1) {
+            uploadImageResponse.setMessage("Image must contain one face.");
+            return Response.status(Response.Status.BAD_REQUEST).entity(uploadImageResponse).build();
+
+        }
+
+        List<String> detectedCelebrities = amazonRekognitionClient.checkForCelebrities(bytes);
+
+        if (!detectedCelebrities.isEmpty()) {
+            uploadImageResponse.setMessage("Image must not contain celebrities. Detected celebrities: "
+                    + detectedCelebrities.stream().collect(Collectors.joining(", ")));
+            return Response.status(Response.Status.BAD_REQUEST).entity(uploadImageResponse).build();
+        }
+
+        uploadImageResponse.setMessage("Success.");
+
+        // Upload image to storage
+
+        // Generate event for image processing
+//        eventProducer.produceMessage(imageId, imageLocation);
+
+        // start image processing over async API
+        CompletionStage<String> stringCompletionStage =
+                imageProcessingApi.processImageAsynch(new ImageProcessRequest(imageId, imageLocation));
+
+        stringCompletionStage.whenComplete((s, throwable) -> System.out.println(s));
+        stringCompletionStage.exceptionally(throwable -> {
+            log.severe(throwable.getMessage());
+            return throwable.getMessage();
+        });
+
+        return Response.status(Response.Status.CREATED).entity(uploadImageResponse).build();
     }
 }
