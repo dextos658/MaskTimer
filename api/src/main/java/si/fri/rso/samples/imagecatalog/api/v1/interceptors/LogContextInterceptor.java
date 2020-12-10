@@ -21,7 +21,6 @@ public class LogContextInterceptor {
     @AroundInvoke
     public Object logMethodEntryAndExit(InvocationContext context) throws Exception {
 
-        ConfigurationUtil configurationUtil = ConfigurationUtil.getInstance();
 
         HashMap settings = new HashMap();
 
