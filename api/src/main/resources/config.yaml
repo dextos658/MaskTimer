@@ -1,0 +1,15 @@
+kumuluzee:
+  name: image-catalog-service
+  env:
+    name: dev
+  version: 1.0.0
+  server:
+    base-url: http://localhost:8080
+    http:
+      port: 8080
+  datasources:
+    - jndi-name: jdbc/nzodobid
+      connection-url: jdbc:postgresql://hattie.db.elephantsql.com:5432/kutzvgvo
+      username: kutzvgvo
+      password: g3Q87TamdFsJgO-0YddxHZdDF6r33HR7
+      max-pool-size: 20
